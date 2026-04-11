@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نور v1.3</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --blue:#2563eb;--blue-d:#1d4ed8;--blue-lt:#eff6ff;--blue-md:#dbeafe;
+  --text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f8fafc;--white:#fff;
+  --green:#16a34a;--green-lt:#f0fdf4;--red:#dc2626;--red-lt:#fef2f2;
+  --yellow:#d97706;--yel-lt:#fffbeb;--purple:#7c3aed;--pur-lt:#f5f3ff;
+  --wa:#25d366;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* NAV */
+nav{background:var(--white);border-bottom:2px solid var(--blue-md);padding:0 14px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0;}
+.nav-brand{display:flex;align-items:center;gap:9px;}
+.nav-ava{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.nav-name{font-size:15px;font-weight:800;color:var(--blue);}
+.nav-sub{font-size:10px;color:var(--muted);}
+.ver{font-size:9px;background:var(--blue-md);color:var(--blue);padding:2px 6px;border-radius:10px;font-weight:700;margin-right:4px;}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.clk-t{font-size:15px;font-weight:700;color:var(--blue);letter-spacing:1px;}
+.clk-d{font-size:10px;color:var(--muted);text-align:left;}
+.bell{width:30px;height:30px;border-radius:50%;border:none;background:var(--blue-lt);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;position:relative;}
+.bell-n{position:absolute;top:-2px;left:-2px;width:15px;height:15px;border-radius:50%;background:var(--red);color:#fff;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center;}
+.bell-n.on{display:flex;}
+
+/* TABS */
+.tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 8px;flex-shrink:0;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:8px 11px;font-family:'Tajawal',sans-serif;font-size:11.5px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;}
+.tab:hover{color:var(--blue);}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:700;}
+
+/* PANELS */
+.panel{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.panel.active{display:flex;}
+
+/* SHARED ELEMENTS */
+.add-bar{background:var(--white);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;}
+.field{font-family:'Tajawal',sans-serif;font-size:12.5px;color:var(--text);background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;direction:rtl;transition:border-color .2s;}
+.field:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.08);}
+.toolbar{background:var(--white);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;gap:5px;flex-shrink:0;align-items:center;flex-wrap:wrap;}
+.tl{font-size:10.5px;color:var(--muted);font-weight:600;white-space:nowrap;}
+.scrollable{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+.scrollable::-webkit-scrollbar{width:3px;}
+.scrollable::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.empty{text-align:center;padding:32px 20px;color:var(--muted);}
+.empty .ei{font-size:34px;margin-bottom:8px;}
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:11px;padding:10px 12px;animation:fu .2s ease;}
+.card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* BUTTONS */
+.btn{padding:7px 13px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
+.btn:hover{background:var(--blue-d);}
+.btn-sm{padding:5px 9px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);color:var(--muted);font-family:'Tajawal',sans-serif;font-size:11px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;}
+.btn-sm:hover{border-color:var(--blue);color:var(--blue);}
+.btn-wa{border-color:var(--wa)!important;color:var(--wa)!important;}
+.btn-wa:hover{background:var(--wa)!important;color:#fff!important;}
+.btn-xl{border-color:#1d6f42!important;color:#1d6f42!important;}
+.btn-xl:hover{background:#1d6f42!important;color:#fff!important;}
+.btn-pr{border-color:#6b7280!important;color:#6b7280!important;}
+.btn-pr:hover{background:#6b7280!important;color:#fff!important;}
+.btn-del{width:26px;height:26px;border-radius:7px;border:none;background:none;color:#94a3b8;cursor:pointer;font-size:13px;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.btn-del:hover{background:var(--red-lt);color:var(--red);}
+
+/* TAGS */
+.tag{font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:20px;}
+.th{background:var(--red-lt);color:var(--red);border:1px solid #fecaca;}
+.tm{background:var(--yel-lt);color:var(--yellow);border:1px solid #fde68a;}
+.tl2{background:var(--green-lt);color:var(--green);border:1px solid #bbf7d0;}
+.tc{background:var(--pur-lt);color:var(--purple);border:1px solid #ddd6fe;font-size:9.5px;padding:2px 7px;border-radius:20px;}
+.td{font-size:9.5px;color:#94a3b8;}
+.tr{background:#ecfdf5;color:#059669;border:1px solid #6ee7b7;font-size:9.5px;padding:2px 7px;border-radius:20px;}
+
+/* SHARE BAR */
+.share-strip{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+
+/* DASHBOARD */
+.dash-grid{flex:1;overflow-y:auto;padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start;}
+.dash-grid::-webkit-scrollbar{width:3px;}
+.sc{background:var(--white);border:1.5px solid var(--border);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:all .15s;}
+.sc:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(37,99,235,.1);}
+.sc.full{grid-column:1/-1;}
+.si{font-size:18px;}.sv{font-size:21px;font-weight:900;color:var(--blue);line-height:1;}
+.sl{font-size:11px;color:var(--muted);font-weight:500;}.ss{font-size:10px;color:var(--muted);}
+.pb{height:4px;background:var(--blue-md);border-radius:3px;overflow:hidden;}
+.pf{height:100%;background:var(--blue);border-radius:3px;transition:width .4s;}
+
+/* CHARTS */
+.chart-card{background:var(--white);border:1.5px solid var(--border);border-radius:11px;padding:12px;}
+.chart-title{font-size:12px;font-weight:700;margin-bottom:8px;}
+
+/* FILTERS */
+.filters{background:var(--blue-lt);border-bottom:1px solid var(--blue-md);display:flex;gap:5px;padding:6px 12px;flex-shrink:0;overflow-x:auto;scrollbar-width:none;}
+.filters::-webkit-scrollbar{display:none;}
+.fb{padding:3px 10px;border-radius:20px;font-size:11px;border:1.5px solid var(--blue-md);background:var(--white);color:var(--blue);font-family:'Tajawal',sans-serif;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.fb.active,.fb:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+.tstats{background:var(--white);border-bottom:1px solid var(--border);display:flex;gap:10px;padding:5px 12px;flex-shrink:0;flex-wrap:wrap;}
+.ts{font-size:11px;color:var(--muted);}.ts strong{color:var(--text);}
+
+/* TODO */
+.ti{display:flex;align-items:flex-start;gap:8px;}
+.ti.done{opacity:.5;}
+.tc2{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.ti.done .tc2{background:var(--green);border-color:var(--green);}
+.tc2::after{content:'✓';font-size:9px;color:#fff;display:none;}
+.ti.done .tc2::after{display:block;}
+.tb{flex:1;}.tt{font-size:13px;line-height:1.4;}
+.ti.done .tt{text-decoration:line-through;color:var(--muted);}
+.tm2{display:flex;gap:4px;margin-top:3px;align-items:center;flex-wrap:wrap;}
+.ia{display:flex;gap:3px;align-items:center;flex-shrink:0;}
+
+/* CALENDAR */
+.cal-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.cal-nav{background:var(--white);border-bottom:1px solid var(--border);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.cal-t{font-size:13px;font-weight:700;}
+.cnb{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.cnb:hover{border-color:var(--blue);color:var(--blue);}
+.cal-hdr{background:var(--blue-lt);display:grid;grid-template-columns:repeat(7,1fr);flex-shrink:0;}
+.cal-hdr div{text-align:center;padding:5px 2px;font-size:10px;font-weight:700;color:var(--blue);}
+.cal-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(7,1fr);align-content:start;padding:3px;}
+.cc{min-height:48px;border-radius:7px;padding:3px;cursor:pointer;transition:all .15s;}
+.cc:hover{background:var(--blue-lt);}
+.cc.other{opacity:.3;}.cc.today .cn{background:var(--blue);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
+.cc.sel{background:var(--blue-lt);border:1.5px solid var(--blue);}
+.cn{font-size:11.5px;font-weight:600;width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
+.cdots{display:flex;gap:2px;flex-wrap:wrap;padding:1px 2px;}
+.cdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.cal-evs{flex-shrink:0;max-height:150px;overflow-y:auto;border-top:1px solid var(--border);background:var(--white);}
+.cet{font-size:11px;font-weight:700;padding:6px 12px 3px;}
+.cei{display:flex;align-items:center;gap:6px;padding:4px 12px;border-bottom:1px solid var(--border);}
+
+/* APPOINTMENTS */
+.apt-colors{display:flex;gap:4px;align-items:center;}
+.cp{width:15px;height:15px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0;}
+.cp.sel{border-color:var(--text);transform:scale(1.3);}
+.ai{display:flex;align-items:flex-start;gap:8px;}
+.ad{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.ab{flex:1;}.at{font-size:13px;font-weight:600;}.am{font-size:11px;color:var(--muted);margin-top:2px;}
+.ntag{font-size:9.5px;padding:2px 7px;border-radius:20px;background:var(--yel-lt);color:var(--yellow);border:1px solid #fde68a;}
+
+/* EXPENSES */
+.exp-sum{background:var(--blue-lt);border-bottom:1px solid var(--blue-md);display:flex;flex-shrink:0;}
+.es{flex:1;padding:7px 10px;text-align:center;border-left:1px solid var(--blue-md);}
+.es:last-child{border-left:none;}
+.esv{font-size:14px;font-weight:800;color:var(--blue);}
+.esl{font-size:10px;color:var(--muted);margin-top:1px;}
+.ei2{display:flex;align-items:center;gap:8px;}
+.eic{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.eb{flex:1;}.et{font-size:13px;font-weight:500;}.em{font-size:10.5px;color:var(--muted);margin-top:1px;}
+.ea{font-size:13px;font-weight:700;white-space:nowrap;}
+.ea.inc{color:var(--green);}
+
+/* NOTEBOOK */
+.nb-wrap{flex:1;display:flex;flex-direction:column;padding:10px 12px;gap:8px;overflow:hidden;}
+.nb-area{flex:1;resize:none;font-size:14px;line-height:2;font-family:'Tajawal',sans-serif;color:var(--text);background:var(--white);border:1.5px solid var(--border);border-radius:11px;padding:14px 16px;direction:rtl;background-image:repeating-linear-gradient(transparent,transparent 31px,#dbeafe 31px,#dbeafe 32px);background-attachment:local;transition:border-color .2s;}
+.nb-area:focus{outline:none;border-color:var(--blue);}
+.nb-footer{display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+
+/* NOTIF PANEL */
+.np{position:fixed;top:52px;left:0;right:0;background:var(--white);border-bottom:2px solid var(--blue-md);z-index:50;max-height:240px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.1);display:none;}
+.np.on{display:block;}
+.nh{padding:8px 14px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.ni{padding:7px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:7px;}
+
+/* PRINT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-overlay.on{display:flex;}
+.modal{background:var(--white);border-radius:16px;padding:20px;width:88%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.18);}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--text);}
+.modal-opt{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.modal-btn{padding:11px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);font-family:'Tajawal',sans-serif;font-size:13px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;text-align:right;}
+.modal-btn:hover{border-color:var(--blue);background:var(--blue-lt);}
+.modal-btn.wa{border-color:var(--wa);color:var(--wa);}
+.modal-btn.wa:hover{background:var(--wa);color:#fff;}
+.modal-cancel{width:100%;padding:9px;border-radius:9px;border:none;background:var(--bg);font-family:'Tajawal',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;}
+
+/* GOOGLE SHEETS STATUS */
+.gs-status{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.gs-off{background:#fef2f2;color:var(--red);}
+.gs-on{background:var(--green-lt);color:var(--green);}
+
+/* TOAST */
+.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:8px 18px;border-radius:22px;font-size:13px;z-index:999;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* PRINT STYLES */
+@media print{
+  nav,.tabs,.add-bar,.filters,.toolbar,.tstats,.btn,.btn-sm,.btn-del,.bell,.np,.modal-overlay,
+  .share-strip,.ia,.apt-colors,.cal-nav,.cal-hdr,.cal-evs{display:none!important;}
+  body{background:#fff;height:auto;overflow:visible;font-family:Arial,sans-serif;}
+  .panel{display:flex!important;flex:none;overflow:visible;page-break-after:always;}
+  .scrollable,.dash-grid,.cal-grid{overflow:visible;height:auto;}
+  .card,.sc{break-inside:avoid;border:1px solid #ccc;margin-bottom:8px;}
+  .chart-card canvas{max-height:300px;}
+}
+</style>
+</head>
+<body>
+
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">مشاركة</div>
+    <div class="modal-opt">
+      <button class="modal-btn wa" onclick="doShare('wa')">💬 إرسال عبر واتساب</button>
+      <button class="modal-btn" onclick="doShare('copy')">📋 نسخ النص</button>
+      <button class="modal-btn" onclick="doShare('print')">🖨️ طباعة</button>
+      <button class="modal-btn" onclick="doShare('excel')">📥 تصدير Excel</button>
+    </div>
+    <button class="modal-cancel" onclick="closeModal()">إلغاء</button>
+  </div>
+</div>
+
+<!-- NOTIF PANEL -->
+<div class="np" id="np">
+  <div class="nh"><span>🔔 التنبيهات</span><span onclick="clearNotifs()" style="font-size:11px;color:var(--blue);cursor:pointer">مسح الكل</span></div>
+  <div id="nl"><div style="padding:14px;text-align:center;color:var(--muted);font-size:12px">لا توجد تنبيهات</div></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-ava">ن</div>
+    <div>
+      <div style="display:flex;align-items:center">
+        <div class="nav-name">نـور</div>
+        <span class="ver">v1.3</span>
+      </div>
+      <div class="nav-sub">لوحة التحكم الشخصية</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="bell" onclick="toggleNotif()">🔔<div class="bell-n" id="bn">0</div></button>
+    <div style="text-align:left">
+      <div class="clk-t" id="clk">--:--</div>
+      <div class="clk-d" id="clkd"></div>
+    </div>
+  </div>
+</nav>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="goTab('dash',this)">🏠 الرئيسية</button>
+  <button class="tab" onclick="goTab('charts',this)">📊 الرسوم</button>
+  <button class="tab" onclick="goTab('todo',this)">✅ المهام</button>
+  <button class="tab" onclick="goTab('cal',this)">📆 التقويم</button>
+  <button class="tab" onclick="goTab('apt',this)">📅 المواعيد</button>
+  <button class="tab" onclick="goTab('exp',this)">💰 المصاريف</button>
+  <button class="tab" onclick="goTab('note',this)">📓 الملاحظات</button>
+  <button class="tab" onclick="goTab('settings',this)">⚙️ الإعدادات</button>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="panel active" id="panel-dash">
+  <div class="toolbar">
+    <span class="tl">مشاركة:</span>
+    <button class="btn-sm btn-wa" onclick="openModal('التقرير الكامل','dash')">💬 واتساب</button>
+    <button class="btn-sm btn-pr" onclick="printSection('dash')">🖨️ طباعة</button>
+    <button class="btn-sm btn-xl" onclick="exportAllExcel()">📥 Excel</button>
+  </div>
+  <div class="dash-grid" id="dash-grid"></div>
+</div>
+
+<!-- ══ CHARTS ══ -->
+<div class="panel" id="panel-charts">
+  <div class="scrollable" style="gap:10px">
+    <div class="chart-card"><div class="chart-title">💸 المصاريف حسب الفئة</div><canvas id="ch-pie"></canvas></div>
+    <div class="chart-card"><div class="chart-title">📈 الدخل مقابل المصاريف — آخر 7 أيام</div><canvas id="ch-bar"></canvas></div>
+    <div class="chart-card"><div class="chart-title">✅ تقدم المهام</div><canvas id="ch-todo"></canvas></div>
+  </div>
+</div>
+
+<!-- ══ TODOS ══ -->
+<div class="panel" id="panel-todo">
+  <div class="add-bar">
+    <input class="field" type="text" id="t-inp" placeholder="مهمة جديدة..." style="flex:1;min-width:120px" onkeydown="if(event.key==='Enter')addTodo()">
+    <select class="field" id="t-pri"><option value="high">🔴 عالية</option><option value="medium" selected>🟡 متوسطة</option><option value="low">🟢 منخفضة</option></select>
+    <input class="field" type="text" id="t-cat" placeholder="الفئة" style="width:80px">
+    <select class="field" id="t-rec"><option value="none">بدون تكرار</option><option value="daily">🌅 يومي</option><option value="weekly">📅 أسبوعي</option><option value="monthly">📆 شهري</option></select>
+    <button class="btn" onclick="addTodo()">+ أضف</button>
+  </div>
+  <div class="toolbar">
+    <input class="field" style="flex:1;min-width:100px;padding:5px 10px;font-size:12px" id="t-srch" placeholder="🔍 بحث..." oninput="renderTodos()">
+    <select class="field" id="t-catf" style="width:90px;padding:5px 8px;font-size:12px" onchange="renderTodos()"><option value="">كل الفئات</option></select>
+    <button class="btn-sm btn-wa" onclick="openModal('المهام','todo')">💬 مشاركة</button>
+    <button class="btn-sm btn-pr" onclick="printSection('todo')">🖨️</button>
+    <button class="btn-sm btn-xl" onclick="exportTodoExcel()">📥 Excel</button>
+  </div>
+  <div class="filters">
+    <button class="fb active" onclick="fTodo('all',this)">الكل</button>
+    <button class="fb" onclick="fTodo('pending',this)">معلقة</button>
+    <button class="fb" onclick="fTodo('done',this)">مكتملة</button>
+    <button class="fb" onclick="fTodo('recurring',this)">🔁 متكررة</button>
+    <button class="fb" onclick="fTodo('high',this)">🔴 عالية</button>
+    <button class="fb" onclick="fTodo('medium',this)">🟡 متوسطة</button>
+    <button class="fb" onclick="fTodo('low',this)">🟢 منخفضة</button>
+  </div>
+  <div class="tstats" id="t-stats"></div>
+  <div class="scrollable" id="t-list"></div>
+</div>
+
+<!-- ══ CALENDAR ══ -->
+<div class="panel" id="panel-cal">
+  <div class="cal-wrap">
+    <div class="cal-nav">
+      <button class="cnb" onclick="calMove(-1)">›</button>
+      <div class="cal-t" id="cal-title"></div>
+      <button class="cnb" onclick="calMove(1)">‹</button>
+    </div>
+    <div class="cal-hdr"><div>أح</div><div>إث</div><div>ث</div><div>أر</div><div>خ</div><div>ج</div><div>س</div></div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="cal-evs" id="cal-evs"><div class="cet">اختر يوماً</div></div>
+  </div>
+</div>
+
+<!-- ══ APPOINTMENTS ══ -->
+<div class="panel" id="panel-apt">
+  <div class="add-bar">
+    <input class="field" type="text" id="a-title" placeholder="عنوان الموعد..." style="flex:1;min-width:110px" onkeydown="if(event.key==='Enter')addApt()">
+    <input class="field" type="date" id="a-date" style="width:130px">
+    <input class="field" type="text" id="a-time" placeholder="الوقت" style="width:85px">
+    <input class="field" type="text" id="a-loc" placeholder="المكان" style="width:80px">
+    <select class="field" id="a-notif"><option value="0">بدون تنبيه</option><option value="30" selected>🔔 30د</option><option value="60">🔔 ساعة</option><option value="1440">🔔 يوم</option></select>
+    <div class="apt-colors">
+      <div class="cp sel" style="background:#2563eb" data-c="#2563eb" onclick="pickC(this)"></div>
+      <div class="cp" style="background:#16a34a" data-c="#16a34a" onclick="pickC(this)"></div>
+      <div class="cp" style="background:#dc2626" data-c="#dc2626" onclick="pickC(this)"></div>
+      <div class="cp" style="background:#d97706" data-c="#d97706" onclick="pickC(this)"></div>
+      <div class="cp" style="background:#7c3aed" data-c="#7c3aed" onclick="pickC(this)"></div>
+    </div>
+    <button class="btn" onclick="addApt()">+ أضف</button>
+  </div>
+  <div class="toolbar">
+    <input class="field" style="flex:1;padding:5px 10px;font-size:12px" id="a-srch" placeholder="🔍 بحث..." oninput="renderApts()">
+    <button class="btn-sm btn-wa" onclick="openModal('المواعيد','apt')">💬 مشاركة</button>
+    <button class="btn-sm btn-pr" onclick="printSection('apt')">🖨️</button>
+    <button class="btn-sm btn-xl" onclick="exportAptExcel()">📥 Excel</button>
+  </div>
+  <div class="scrollable" id="a-list"></div>
+</div>
+
+<!-- ══ EXPENSES ══ -->
+<div class="panel" id="panel-exp">
+  <div class="add-bar">
+    <input class="field" type="text" id="e-desc" placeholder="وصف..." style="flex:1;min-width:90px" onkeydown="if(event.key==='Enter')addExp()">
+    <input class="field" type="number" id="e-amt" placeholder="المبلغ" style="width:95px" min="0">
+    <select class="field" id="e-cat"><option>🍽️ طعام</option><option>🚗 مواصلات</option><option>🛒 تسوق</option><option>🏥 صحة</option><option>📚 تعليم</option><option>🎮 ترفيه</option><option>🏠 سكن</option><option>💼 عمل</option><option>✅ دخل</option><option>📦 أخرى</option></select>
+    <input class="field" type="date" id="e-date" style="width:130px">
+    <button class="btn" onclick="addExp()">+ أضف</button>
+  </div>
+  <div class="exp-sum" id="e-sum"></div>
+  <div class="toolbar">
+    <input class="field" style="width:85px;padding:5px 8px;font-size:12px" id="e-srch" placeholder="🔍 بحث..." oninput="renderExps()">
+    <select class="field" id="e-catf" style="width:95px;padding:5px 8px;font-size:12px" onchange="renderExps()"><option value="">كل الفئات</option><option>🍽️ طعام</option><option>🚗 مواصلات</option><option>🛒 تسوق</option><option>🏥 صحة</option><option>📚 تعليم</option><option>🎮 ترفيه</option><option>🏠 سكن</option><option>💼 عمل</option><option>✅ دخل</option><option>📦 أخرى</option></select>
+    <input class="field" type="date" id="e-from" style="width:120px;padding:5px 8px;font-size:12px" onchange="renderExps()" title="من تاريخ">
+    <input class="field" type="date" id="e-to" style="width:120px;padding:5px 8px;font-size:12px" onchange="renderExps()" title="إلى تاريخ">
+    <button class="btn-sm btn-wa" onclick="openModal('المصاريف','exp')">💬 مشاركة</button>
+    <button class="btn-sm btn-xl" onclick="exportExpExcel()">📥 Excel</button>
+  </div>
+  <div class="scrollable" id="e-list"></div>
+</div>
+
+<!-- ══ NOTEBOOK ══ -->
+<div class="panel" id="panel-note">
+  <div class="nb-wrap">
+    <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:700">📓 ملاحظاتك</span>
+      <button class="btn-sm btn-wa" onclick="openModal('الملاحظات','note')">💬 مشاركة</button>
+      <button class="btn-sm btn-pr" onclick="printSection('note')">🖨️ طباعة</button>
+    </div>
+    <textarea class="nb-area" id="nb" placeholder="اكتب هنا...&#10;💡 أفكارك&#10;📌 ملاحظات مهمة&#10;🎯 أهداف اليوم" oninput="onNb(this)"></textarea>
+    <div class="nb-footer">
+      <span style="font-size:11px;color:var(--muted)" id="nb-char">0 حرف</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:11px;color:var(--green);display:none" id="nb-saved">✓ محفوظ</span>
+        <button class="btn" onclick="saveNote()">حفظ 💾</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS ══ -->
+<div class="panel" id="panel-settings">
+  <div class="scrollable" style="gap:12px">
+    <div class="card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">☁️ Google Sheets — حفظ على السحابة</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6">
+        أضف رابط Google Apps Script لحفظ بياناتك على Google Sheets تلقائياً
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+        <input class="field" type="text" id="gs-url" placeholder="https://script.google.com/..." style="flex:1;min-width:200px;font-size:12px">
+        <button class="btn" onclick="saveGsUrl()">حفظ الرابط</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="gs-status" class="gs-status gs-off">● غير متصل</span>
+        <button class="btn-sm" onclick="testGs()">اختبار الاتصال</button>
+        <button class="btn-sm" onclick="syncToGs()">☁️ رفع البيانات الآن</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">📱 تصدير واستيراد</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-sm btn-xl" onclick="exportAllExcel()">📥 تصدير كل البيانات Excel</button>
+        <button class="btn-sm" onclick="exportJSON()">📄 تصدير JSON</button>
+        <button class="btn-sm btn-pr" onclick="printSection('dash')">🖨️ طباعة التقرير الكامل</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">🗑️ إدارة البيانات</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-sm" style="border-color:var(--red);color:var(--red)" onclick="clearData('todos')">مسح المهام</button>
+        <button class="btn-sm" style="border-color:var(--red);color:var(--red)" onclick="clearData('apts')">مسح المواعيد</button>
+        <button class="btn-sm" style="border-color:var(--red);color:var(--red)" onclick="clearData('exps')">مسح المصاريف</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px">📋 خطوات Google Sheets</div>
+      <div style="font-size:11.5px;color:var(--muted);line-height:2">
+        1. افتح <strong>script.google.com</strong><br>
+        2. مشروع جديد → الصق كود الـ Apps Script<br>
+        3. نشر → نشر كتطبيق ويب → أي شخص<br>
+        4. انسخ الرابط وضعه في الحقل أعلاه<br>
+        <span style="color:var(--blue);cursor:pointer" onclick="showGsCode()">📄 عرض كود Apps Script</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+// ══════════════════════════════════════════
+// STORAGE — localStorage (works everywhere)
+// ══════════════════════════════════════════
+function sGet(k){try{const v=localStorage.getItem('noor_'+k);return v?JSON.parse(v):null;}catch{return null;}}
+function sSet(k,v){try{localStorage.setItem('noor_'+k,JSON.stringify(v));}catch{toast('⚠️ فشل الحفظ المحلي');}}
+
+// ══ CLOCK ══
+function tick(){
+  const n=new Date();
+  document.getElementById('clk').textContent=n.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('clkd').textContent=n.toLocaleDateString('ar-SA',{weekday:'long',month:'long',day:'numeric'});
+}
+tick();setInterval(tick,1000);
+
+// ══ TABS ══
+function goTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='dash')renderDash();
+  if(name==='cal')renderCal();
+  if(name==='charts')renderCharts();
+  if(name==='settings'){const u=sGet('gs_url')||'';document.getElementById('gs-url').value=u;updateGsStatus();}
+}
+
+// ══ TOAST ══
+let _tt;
+function toast(msg,dur=2500){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),dur);}
+
+// ══ UTILS ══
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function fmtDate(d){if(!d)return'';try{return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric',weekday:'short'});}catch{return d;}}
+const recL={none:'',daily:'🌅 يومي',weekly:'📅 أسبوعي',monthly:'📆 شهري'};
+const priL={high:'🔴 عالية',medium:'🟡 متوسطة',low:'🟢 منخفضة'};
+const priC={high:'th',medium:'tm',low:'tl2'};
+const catBg={'🍽️ طعام':'#fef9c3','🚗 مواصلات':'#e0f2fe','🛒 تسوق':'#fce7f3','🏥 صحة':'#dcfce7','📚 تعليم':'#ede9fe','🎮 ترفيه':'#fff7ed','🏠 سكن':'#f0f9ff','💼 عمل':'#f8fafc','✅ دخل':'#dcfce7','📦 أخرى':'#f1f5f9'};
+const catIc={'🍽️ طعام':'🍽️','🚗 مواصلات':'🚗','🛒 تسوق':'🛒','🏥 صحة':'🏥','📚 تعليم':'📚','🎮 ترفيه':'🎮','🏠 سكن':'🏠','💼 عمل':'💼','✅ دخل':'✅','📦 أخرى':'📦'};
+
+// ══ SHARE MODAL ══
+let _modalSection='';
+function openModal(title,section){
+  _modalSection=section;
+  document.getElementById('modal-title').textContent='مشاركة — '+title;
+  document.getElementById('share-modal').classList.add('on');
+}
+function closeModal(){document.getElementById('share-modal').classList.remove('on');}
+function doShare(method){
+  closeModal();
+  if(method==='wa') window.open('https://wa.me/?text='+encodeURIComponent(buildText(_modalSection)),'_blank');
+  else if(method==='copy'){navigator.clipboard.writeText(buildText(_modalSection)).then(()=>toast('📋 تم النسخ!')).catch(()=>{const ta=document.createElement('textarea');ta.value=buildText(_modalSection);document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 تم النسخ!');});}
+  else if(method==='print') printSection(_modalSection);
+  else if(method==='excel'){
+    if(_modalSection==='todo')exportTodoExcel();
+    else if(_modalSection==='apt')exportAptExcel();
+    else if(_modalSection==='exp')exportExpExcel();
+    else exportAllExcel();
+  }
+}
+
+// ══ PRINT (FIXED) ══
+function printSection(section){
+  const date=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  let body='';
+  if(section==='dash'||section==='todo'){
+    body+=`<h2>✅ المهام</h2>`;
+    if(!todos.length){body+='<p>لا توجد مهام</p>';}
+    else{body+='<table border="1" cellpadding="6" cellspacing="0" width="100%"><tr><th>المهمة</th><th>الأولوية</th><th>الفئة</th><th>التكرار</th><th>الحالة</th><th>التاريخ</th></tr>';
+    todos.forEach(t=>{body+=`<tr><td>${esc(t.text)}</td><td>${priL[t.priority]}</td><td>${esc(t.category||'')}</td><td>${recL[t.recurrence]||''}</td><td>${t.done?'✅ مكتملة':'⏳ معلقة'}</td><td>${t.date}</td></tr>`;});
+    body+='</table>';}
+  }
+  if(section==='dash'||section==='apt'){
+    body+=`<h2>📅 المواعيد</h2>`;
+    if(!apts.length){body+='<p>لا توجد مواعيد</p>';}
+    else{body+='<table border="1" cellpadding="6" cellspacing="0" width="100%"><tr><th>الموعد</th><th>التاريخ</th><th>الوقت</th><th>المكان</th></tr>';
+    [...apts].sort((a,b)=>a.date.localeCompare(b.date)).forEach(a=>{body+=`<tr><td>${esc(a.title)}</td><td>${fmtDate(a.date)}</td><td>${esc(a.time||'')}</td><td>${esc(a.loc||'')}</td></tr>`;});
+    body+='</table>';}
+  }
+  if(section==='dash'||section==='exp'){
+    const inc=exps.filter(e=>e.category==='✅ دخل').reduce((s,e)=>s+e.amount,0);
+    const spd=exps.filter(e=>e.category!=='✅ دخل').reduce((s,e)=>s+e.amount,0);
+    body+=`<h2>💰 المصاريف</h2><p>الدخل: ${inc.toLocaleString('ar-SA')} ر.س | المصاريف: ${spd.toLocaleString('ar-SA')} ر.س | الرصيد: ${(inc-spd).toLocaleString('ar-SA')} ر.س</p>`;
+    if(exps.length){body+='<table border="1" cellpadding="6" cellspacing="0" width="100%"><tr><th>الوصف</th><th>المبلغ</th><th>الفئة</th><th>التاريخ</th></tr>';
+    exps.forEach(e=>{body+=`<tr><td>${esc(e.desc)}</td><td>${e.amount.toLocaleString('ar-SA')} ر.س</td><td>${esc(e.category)}</td><td>${e.date}</td></tr>`;});
+    body+='</table>';}
+  }
+  if(section==='note'){body+=`<h2>📓 الملاحظات</h2><pre style="white-space:pre-wrap;font-family:Arial;line-height:1.8">${esc(document.getElementById('nb').value||'لا توجد ملاحظات')}</pre>`;}
+
+  const w=window.open('','_blank','width=800,height=600');
+  if(!w){toast('⚠️ السماح بالنوافذ المنبثقة في المتصفح');return;}
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>نور v1.3 — ${date}</title>
+  <style>body{font-family:Arial,sans-serif;direction:rtl;padding:24px;font-size:13px;line-height:1.8;color:#1e293b;}
+  h1{color:#2563eb;border-bottom:2px solid #dbeafe;padding-bottom:8px;margin-bottom:16px;}
+  h2{color:#1e3a8a;margin-top:20px;margin-bottom:8px;}
+  table{border-collapse:collapse;margin-bottom:16px;}
+  th{background:#eff6ff;color:#1e40af;}
+  pre{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;}
+  </style></head><body>
+  <h1>📋 تقرير نور v1.3 — ${date}</h1>${body}
+  <p style="margin-top:20px;font-size:11px;color:#94a3b8">نور v1.3 — لوحة التحكم الشخصية</p>
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},600);
+}
+
+// ══ NOTIFICATIONS ══
+let notifs=[];
+function checkNotifs(){
+  const now=new Date();
+  apts.forEach(a=>{
+    if(!a.notifyMin||!a.date||!a.time)return;
+    const m=a.time.match(/(\d+):(\d+)/);if(!m)return;
+    let h=parseInt(m[1]),mn=parseInt(m[2]);
+    if(a.time.includes('م')&&h<12)h+=12;
+    if(a.time.includes('ص')&&h===12)h=0;
+    const dt=new Date(a.date+'T'+String(h).padStart(2,'0')+':'+String(mn).padStart(2,'0')+':00');
+    const diff=Math.round((dt-now)/60000);
+    if(diff>=0&&diff<=a.notifyMin&&!notifs.find(n=>n.aptId===a.id)){
+      notifs.push({id:Date.now(),aptId:a.id,title:a.title,diff,time:a.time,date:a.date});
+      renderNotifs();toast(`🔔 ${a.title} — بعد ${diff} دقيقة`,4000);
+    }
+  });
+}
+function renderNotifs(){
+  const b=document.getElementById('bn'),l=document.getElementById('nl');
+  if(!notifs.length){b.classList.remove('on');l.innerHTML='<div style="padding:14px;text-align:center;color:var(--muted);font-size:12px">لا توجد تنبيهات</div>';return;}
+  b.textContent=notifs.length;b.classList.add('on');
+  l.innerHTML=notifs.map(n=>`<div class="ni"><div style="font-size:16px">🔔</div>
+    <div style="flex:1"><div style="font-size:12px;font-weight:600">${esc(n.title)}</div>
+    <div style="font-size:10.5px;color:var(--muted)">${fmtDate(n.date)} ${n.time} — ${n.diff===0?'الآن!':'بعد '+n.diff+' دقيقة'}</div></div>
+    <span style="color:#94a3b8;cursor:pointer;font-size:13px" onclick="dismissNotif(${n.id})">✕</span>
+  </div>`).join('');
+}
+function dismissNotif(id){notifs=notifs.filter(n=>n.id!==id);renderNotifs();}
+function clearNotifs(){notifs=[];renderNotifs();document.getElementById('np').classList.remove('on');}
+function toggleNotif(){document.getElementById('np').classList.toggle('on');}
+setInterval(checkNotifs,60000);
+
+// ══ TODOS ══
+let todos=[],todoF='all';
+function loadTodos(){todos=sGet('todos')||[];processRecurring();renderTodos();updateCatFilter();}
+function saveTodos(){sSet('todos',todos);renderDash();syncToGsAuto();}
+
+function processRecurring(){
+  const today=todayStr();let ch=false;
+  todos.forEach(t=>{
+    if(!t.recurrence||t.recurrence==='none'||!t.done||t.lastReset===today)return;
+    const d=Math.round((new Date(today)-new Date(t.lastReset||t.date))/86400000);
+    if((t.recurrence==='daily'&&d>=1)||(t.recurrence==='weekly'&&d>=7)||(t.recurrence==='monthly'&&d>=28)){t.done=false;t.lastReset=today;ch=true;}
+  });
+  if(ch)saveTodos();
+}
+function updateCatFilter(){
+  const cats=[...new Set(todos.map(t=>t.category).filter(Boolean))];
+  const sel=document.getElementById('t-catf');
+  sel.innerHTML='<option value="">كل الفئات</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join('');
+}
+function addTodo(){
+  const inp=document.getElementById('t-inp'),txt=inp.value.trim();
+  if(!txt){toast('⚠️ اكتب نص المهمة');return;}
+  const rec=document.getElementById('t-rec').value;
+  todos.unshift({id:Date.now(),text:txt,priority:document.getElementById('t-pri').value,category:document.getElementById('t-cat').value.trim(),recurrence:rec,done:false,date:todayStr(),lastReset:todayStr()});
+  inp.value='';document.getElementById('t-cat').value='';document.getElementById('t-rec').value='none';
+  saveTodos();renderTodos();updateCatFilter();
+  toast(rec!=='none'?'🔁 مهمة متكررة أضيفت':'✅ تمت الإضافة');
+}
+function toggleTodo(id){const t=todos.find(x=>x.id===id);if(t){t.done=!t.done;if(t.done)t.lastReset=todayStr();saveTodos();renderTodos();}}
+function deleteTodo(id){if(!confirm('حذف هذه المهمة؟'))return;todos=todos.filter(x=>x.id!==id);saveTodos();renderTodos();updateCatFilter();toast('🗑️ تم الحذف');}
+function fTodo(f,btn){todoF=f;document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTodos();}
+function shareOneTodo(t){const p={high:'🔴',medium:'🟡',low:'🟢'}[t.priority];const r=t.recurrence&&t.recurrence!=='none'?` [${recL[t.recurrence]}]`:'';window.open('https://wa.me/?text='+encodeURIComponent(`📝 *مهمة من نور*\n${t.done?'☑':'☐'} ${p} ${t.text}${t.category?' ('+t.category+')':''}${r}\n📅 ${fmtDate(t.date)}`),'_blank');}
+
+function renderTodos(){
+  const srch=(document.getElementById('t-srch')?.value||'').toLowerCase();
+  const catF=document.getElementById('t-catf')?.value||'';
+  const tot=todos.length,dn=todos.filter(t=>t.done).length;
+  document.getElementById('t-stats').innerHTML=`<span class="ts">📋 <strong>${tot}</strong></span><span class="ts">✅ <strong>${dn}</strong></span><span class="ts">⏳ <strong>${tot-dn}</strong></span><span class="ts">🔁 <strong>${todos.filter(t=>t.recurrence&&t.recurrence!=='none').length}</strong></span><span class="ts">🔴 <strong>${todos.filter(t=>t.priority==='high'&&!t.done).length}</strong></span>`;
+  let list=todos;
+  if(todoF==='pending')list=list.filter(t=>!t.done);
+  else if(todoF==='done')list=list.filter(t=>t.done);
+  else if(todoF==='recurring')list=list.filter(t=>t.recurrence&&t.recurrence!=='none');
+  else if(['high','medium','low'].includes(todoF))list=list.filter(t=>t.priority===todoF);
+  if(srch)list=list.filter(t=>t.text.toLowerCase().includes(srch)||(t.category||'').toLowerCase().includes(srch));
+  if(catF)list=list.filter(t=>t.category===catF);
+  const el=document.getElementById('t-list');
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="ei">📝</div><p>لا توجد مهام</p></div>`;return;}
+  el.innerHTML=list.map(t=>`<div class="card"><div class="ti ${t.done?'done':''}">
+    <div class="tc2" onclick="toggleTodo(${t.id})"></div>
+    <div class="tb"><div class="tt">${esc(t.text)}</div>
+      <div class="tm2">
+        <span class="tag ${priC[t.priority]}">${priL[t.priority]}</span>
+        ${t.category?`<span class="tc">${esc(t.category)}</span>`:''}
+        ${t.recurrence&&t.recurrence!=='none'?`<span class="tr">${recL[t.recurrence]}</span>`:''}
+        <span class="td">${fmtDate(t.date)}</span>
+      </div>
+    </div>
+    <div class="ia">
+      <button class="btn-sm btn-wa" onclick="shareOneTodo(${JSON.stringify(t).replace(/"/g,'&quot;')})" title="واتساب">💬</button>
+      <button class="btn-del" onclick="deleteTodo(${t.id})">🗑</button>
+    </div>
+  </div></div>`).join('');
+}
+
+// ══ CALENDAR ══
+let calY=new Date().getFullYear(),calM=new Date().getMonth(),calSel=todayStr();
+function calMove(d){calM+=d;if(calM>11){calM=0;calY++;}if(calM<0){calM=11;calY--;}renderCal();}
+function renderCal(){
+  const today=todayStr(),f=new Date(calY,calM,1),l=new Date(calY,calM+1,0);
+  document.getElementById('cal-title').textContent=new Date(calY,calM,1).toLocaleDateString('ar-SA',{year:'numeric',month:'long'});
+  const am={};apts.forEach(a=>{if(!am[a.date])am[a.date]=[];am[a.date].push(a);});
+  const cells=Math.ceil((f.getDay()+l.getDate())/7)*7;
+  let html='';
+  for(let i=0;i<cells;i++){
+    const dt=new Date(calY,calM,i-f.getDay()+1),ds=dt.toISOString().split('T')[0];
+    const other=dt.getMonth()!==calM;
+    html+=`<div class="cc ${other?'other':''} ${ds===today?'today':''} ${ds===calSel?'sel':''}" onclick="calSel='${ds}';renderCal()">
+      <div class="cn">${dt.getDate()}</div>
+      <div class="cdots">${(am[ds]||[]).slice(0,4).map(a=>`<div class="cdot" style="background:${a.color}"></div>`).join('')}</div>
+    </div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+  const da=apts.filter(a=>a.date===calSel).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const ev=document.getElementById('cal-evs');
+  ev.innerHTML=`<div class="cet">📅 ${fmtDate(calSel)} — ${da.length?da.length+' موعد':'لا مواعيد'}</div>`+
+    da.map(a=>`<div class="cei"><div class="cdot" style="background:${a.color}"></div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600">${esc(a.title)}</div>${a.loc?`<div style="font-size:10px;color:var(--muted)">📍 ${esc(a.loc)}</div>`:''}</div>
+      ${a.time?`<div style="font-size:10.5px;color:var(--muted)">🕐 ${esc(a.time)}</div>`:''}
+    </div>`).join('');
+}
+
+// ══ APPOINTMENTS ══
+let apts=[],aptColor='#2563eb';
+function pickC(el){document.querySelectorAll('.cp').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');aptColor=el.dataset.c;}
+function loadApts(){apts=sGet('apts')||[];renderApts();checkNotifs();}
+function saveApts(){sSet('apts',apts);renderDash();if(document.getElementById('panel-cal').classList.contains('active'))renderCal();syncToGsAuto();}
+function addApt(){
+  const title=document.getElementById('a-title').value.trim(),date=document.getElementById('a-date').value;
+  if(!title){toast('⚠️ اكتب العنوان');return;}if(!date){toast('⚠️ اختر التاريخ');return;}
+  apts.unshift({id:Date.now(),title,date,time:document.getElementById('a-time').value.trim(),loc:document.getElementById('a-loc').value.trim(),color:aptColor,notifyMin:parseInt(document.getElementById('a-notif').value)||0});
+  document.getElementById('a-title').value='';document.getElementById('a-time').value='';document.getElementById('a-loc').value='';
+  saveApts();renderApts();toast('📅 تمت إضافة الموعد');
+}
+function deleteApt(id){if(!confirm('حذف هذا الموعد؟'))return;apts=apts.filter(x=>x.id!==id);saveApts();renderApts();toast('🗑️ تم الحذف');}
+function shareOneApt(a){window.open('https://wa.me/?text='+encodeURIComponent(`📅 *موعد من نور*\n📌 ${a.title}\n📆 ${fmtDate(a.date)}${a.time?'\n🕐 '+a.time:''}${a.loc?'\n📍 '+a.loc:''}`),'_blank');}
+function renderApts(){
+  const srch=(document.getElementById('a-srch')?.value||'').toLowerCase();
+  const el=document.getElementById('a-list'),today=todayStr();
+  let list=[...apts].sort((a,b)=>a.date.localeCompare(b.date));
+  if(srch)list=list.filter(a=>a.title.toLowerCase().includes(srch)||(a.loc||'').toLowerCase().includes(srch));
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="ei">📅</div><p>لا توجد مواعيد</p></div>`;return;}
+  el.innerHTML=list.map(a=>`<div class="card" style="border-right:4px solid ${a.color};${a.date<today?'opacity:.5':''}">
+    <div class="ai">
+      <div class="ad" style="background:${a.color}"></div>
+      <div class="ab">
+        <div class="at">${esc(a.title)}</div>
+        <div class="am">📆 ${fmtDate(a.date)}${a.time?' 🕐 '+esc(a.time):''}${a.loc?' 📍 '+esc(a.loc):''}${a.date<today?' (منتهي)':''}</div>
+        ${a.notifyMin?`<span class="ntag">🔔 قبل ${a.notifyMin>=60?a.notifyMin/60+' ساعة':a.notifyMin+' د'}</span>`:''}
+      </div>
+      <div class="ia">
+        <button class="btn-sm btn-wa" onclick="shareOneApt(${JSON.stringify(a).replace(/"/g,'&quot;')})" title="واتساب">💬</button>
+        <button class="btn-del" onclick="deleteApt(${a.id})">🗑</button>
+      </div>
+    </div>
+  </div>`).join('');
+}
+
+// ══ EXPENSES ══
+let exps=[];
+function loadExps(){exps=sGet('exps')||[];document.getElementById('e-date').value=todayStr();renderExps();}
+function saveExps(){sSet('exps',exps);renderDash();syncToGsAuto();}
+function addExp(){
+  const desc=document.getElementById('e-desc').value.trim(),amt=parseFloat(document.getElementById('e-amt').value),cat=document.getElementById('e-cat').value,date=document.getElementById('e-date').value||todayStr();
+  if(!desc){toast('⚠️ اكتب الوصف');return;}if(!amt||amt<=0){toast('⚠️ اكتب مبلغاً صحيحاً');return;}
+  exps.unshift({id:Date.now(),desc,amount:amt,category:cat,date});
+  document.getElementById('e-desc').value='';document.getElementById('e-amt').value='';
+  saveExps();renderExps();toast(cat==='✅ دخل'?'💚 تم إضافة الدخل':'💸 تم التسجيل');
+}
+function deleteExp(id){if(!confirm('حذف هذا السجل؟'))return;exps=exps.filter(x=>x.id!==id);saveExps();renderExps();toast('🗑️ تم الحذف');}
+function shareOneExp(e){window.open('https://wa.me/?text='+encodeURIComponent(`💰 *مصروف من نور*\n${e.category} ${e.desc}\n${e.category==='✅ دخل'?'+':'-'}${e.amount.toLocaleString('ar-SA')} ر.س\n📅 ${fmtDate(e.date)}`),'_blank');}
+function getFilteredExps(){
+  const srch=(document.getElementById('e-srch')?.value||'').toLowerCase();
+  const catF=document.getElementById('e-catf')?.value||'';
+  const from=document.getElementById('e-from')?.value||'';
+  const to=document.getElementById('e-to')?.value||'';
+  return exps.filter(e=>{
+    if(srch&&!e.desc.toLowerCase().includes(srch))return false;
+    if(catF&&e.category!==catF)return false;
+    if(from&&e.date<from)return false;
+    if(to&&e.date>to)return false;
+    return true;
+  });
+}
+function renderExps(){
+  const list=getFilteredExps();
+  const inc=list.filter(e=>e.category==='✅ دخل').reduce((s,e)=>s+e.amount,0);
+  const spd=list.filter(e=>e.category!=='✅ دخل').reduce((s,e)=>s+e.amount,0);
+  document.getElementById('e-sum').innerHTML=`
+    <div class="es"><div class="esv" style="color:var(--green)">${inc.toLocaleString('ar-SA')}</div><div class="esl">💚 دخل</div></div>
+    <div class="es"><div class="esv" style="color:var(--red)">${spd.toLocaleString('ar-SA')}</div><div class="esl">💸 مصاريف</div></div>
+    <div class="es"><div class="esv" style="color:${inc-spd>=0?'var(--blue)':'var(--red)'}">${(inc-spd).toLocaleString('ar-SA')}</div><div class="esl">📊 الرصيد</div></div>`;
+  const el=document.getElementById('e-list');
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="ei">💰</div><p>لا توجد معاملات</p></div>`;return;}
+  el.innerHTML=list.map(e=>`<div class="card"><div class="ei2">
+    <div class="eic" style="background:${catBg[e.category]||'#f1f5f9'}">${catIc[e.category]||'📦'}</div>
+    <div class="eb"><div class="et">${esc(e.desc)}</div><div class="em">${esc(e.category)} · ${fmtDate(e.date)}</div></div>
+    <div class="ea ${e.category==='✅ دخل'?'inc':''}">${e.category==='✅ دخل'?'+':'−'}${e.amount.toLocaleString('ar-SA')} ر.س</div>
+    <div class="ia">
+      <button class="btn-sm btn-wa" onclick="shareOneExp(${JSON.stringify(e).replace(/"/g,'&quot;')})" title="واتساب">💬</button>
+      <button class="btn-del" onclick="deleteExp(${e.id})">🗑</button>
+    </div>
+  </div></div>`).join('');
+}
+
+// ══ NOTEBOOK ══
+let nbTimer=null;
+function loadNote(){const d=sGet('note');const txt=d?.text||'';document.getElementById('nb').value=txt;document.getElementById('nb-char').textContent=txt.length+' حرف';}
+function onNb(el){document.getElementById('nb-char').textContent=el.value.length+' حرف';document.getElementById('nb-saved').style.display='none';clearTimeout(nbTimer);nbTimer=setTimeout(()=>saveNote(true),2000);}
+function saveNote(auto=false){
+  const txt=document.getElementById('nb').value;sSet('note',{text:txt});renderDash();
+  document.getElementById('nb-saved').style.display='inline';
+  if(!auto)toast('📓 تم الحفظ');
+  setTimeout(()=>{document.getElementById('nb-saved').style.display='none';},3000);
+}
+
+// ══ CHARTS ══
+let cPie=null,cBar=null,cTodo=null;
+function renderCharts(){
+  const cats={};exps.filter(e=>e.category!=='✅ دخل').forEach(e=>{cats[e.category]=(cats[e.category]||0)+e.amount;});
+  const pLabels=Object.keys(cats),pData=Object.values(cats);
+  const colors=['#fbbf24','#60a5fa','#f472b6','#34d399','#a78bfa','#fb923c','#38bdf8','#4ade80','#f87171'];
+  if(cPie)cPie.destroy();
+  cPie=new Chart(document.getElementById('ch-pie').getContext('2d'),{type:'doughnut',data:{labels:pLabels.length?pLabels:['لا توجد بيانات'],datasets:[{data:pData.length?pData:[1],backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:11},boxWidth:12}}},cutout:'60%',responsive:true,maintainAspectRatio:true}});
+  const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);}
+  const iArr=days.map(d=>exps.filter(e=>e.date===d&&e.category==='✅ دخل').reduce((s,e)=>s+e.amount,0));
+  const sArr=days.map(d=>exps.filter(e=>e.date===d&&e.category!=='✅ دخل').reduce((s,e)=>s+e.amount,0));
+  const dLabels=days.map(d=>new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'short',day:'numeric'}));
+  if(cBar)cBar.destroy();
+  cBar=new Chart(document.getElementById('ch-bar').getContext('2d'),{type:'bar',data:{labels:dLabels,datasets:[{label:'دخل',data:iArr,backgroundColor:'rgba(22,163,74,.7)',borderRadius:5},{label:'مصاريف',data:sArr,backgroundColor:'rgba(220,38,38,.7)',borderRadius:5}]},options:{plugins:{legend:{labels:{font:{family:'Tajawal',size:11},boxWidth:12}}},scales:{y:{beginAtZero:true,ticks:{font:{family:'Tajawal',size:10}}}},responsive:true,maintainAspectRatio:true}});
+  const dn=todos.filter(t=>t.done).length,pn=todos.filter(t=>!t.done).length;
+  if(cTodo)cTodo.destroy();
+  cTodo=new Chart(document.getElementById('ch-todo').getContext('2d'),{type:'doughnut',data:{labels:['مكتملة','معلقة'],datasets:[{data:[dn,pn||1],backgroundColor:['rgba(22,163,74,.8)','rgba(229,231,235,.9)'],borderWidth:2,borderColor:'#fff'}]},options:{plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:11},boxWidth:12}}},cutout:'65%',responsive:true,maintainAspectRatio:true}});
+}
+
+// ══ DASHBOARD ══
+function renderDash(){
+  const tot=todos.length,dn=todos.filter(t=>t.done).length,pct=tot?Math.round(dn/tot*100):0;
+  const highP=todos.filter(t=>!t.done&&t.priority==='high').length;
+  const today=todayStr(),ta=apts.filter(a=>a.date===today);
+  const na=apts.filter(a=>a.date>=today).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  const inc=exps.filter(e=>e.category==='✅ دخل').reduce((s,e)=>s+e.amount,0);
+  const spd=exps.filter(e=>e.category!=='✅ دخل').reduce((s,e)=>s+e.amount,0);
+  const nb=document.getElementById('nb')?.value||'';
+  const tabs=document.querySelectorAll('.tab');
+  document.getElementById('dash-grid').innerHTML=`
+    <div class="sc" onclick="goTab('todo',tabs[2])"><div class="si">✅</div><div class="sv">${dn}<span style="font-size:12px;color:var(--muted)">/${tot}</span></div><div class="sl">المهام المكتملة</div><div class="pb"><div class="pf" style="width:${pct}%"></div></div><div class="ss">${pct}% إنجاز</div></div>
+    <div class="sc" onclick="goTab('todo',tabs[2])"><div class="si">🔴</div><div class="sv" style="color:${highP?'var(--red)':'var(--green)'}">${highP}</div><div class="sl">مهام عاجلة</div><div class="ss">${highP?'تحتاج اهتماماً':'ممتاز!'}</div></div>
+    <div class="sc" onclick="goTab('cal',tabs[3])"><div class="si">📆</div><div class="sv">${ta.length}</div><div class="sl">مواعيد اليوم</div><div class="ss">${ta.length?ta.slice(0,2).map(a=>a.title).join(' · '):na?'القادم: '+na.title:'لا مواعيد'}</div></div>
+    <div class="sc" onclick="goTab('exp',tabs[5])"><div class="si">💰</div><div class="sv" style="font-size:16px;color:${inc-spd>=0?'var(--green)':'var(--red)'}">${(inc-spd).toLocaleString('ar-SA')}</div><div class="sl">الرصيد (ر.س)</div><div class="ss">↑${inc.toLocaleString('ar-SA')} ↓${spd.toLocaleString('ar-SA')}</div></div>
+    <div class="sc full" onclick="goTab('note',tabs[6])"><div class="si">📓</div><div class="sl">آخر ملاحظة</div><div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.6">${nb.trim()?esc(nb.trim().substring(0,160))+(nb.length>160?'...':''):'اضغط هنا لتكتب أفكارك...'}</div></div>`;
+}
+
+// ══ BUILD TEXT FOR SHARE ══
+function buildText(section){
+  const d=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  let txt=`📋 *نور v1.3 — ${d}*\n\n`;
+  if(section==='dash'||section==='todo'){txt+='✅ *المهام*\n';if(!todos.length)txt+='لا توجد مهام\n';else todos.forEach(t=>{const p={high:'🔴',medium:'🟡',low:'🟢'}[t.priority];txt+=`${t.done?'☑':'☐'} ${p} ${t.text}${t.category?' ('+t.category+')':''}${t.recurrence&&t.recurrence!=='none'?' ['+recL[t.recurrence]+']':''}\n`;});txt+='\n';}
+  if(section==='dash'||section==='apt'){txt+='📅 *المواعيد*\n';if(!apts.length)txt+='لا توجد مواعيد\n';else[...apts].sort((a,b)=>a.date.localeCompare(b.date)).forEach(a=>{txt+=`📌 ${a.title} — ${fmtDate(a.date)}${a.time?' '+a.time:''}${a.loc?' | '+a.loc:''}\n`;});txt+='\n';}
+  if(section==='dash'||section==='exp'){const inc=exps.filter(e=>e.category==='✅ دخل').reduce((s,e)=>s+e.amount,0),spd=exps.filter(e=>e.category!=='✅ دخل').reduce((s,e)=>s+e.amount,0);txt+=`💰 *المصاريف*\nدخل: ${inc.toLocaleString('ar-SA')} | مصاريف: ${spd.toLocaleString('ar-SA')} | رصيد: ${(inc-spd).toLocaleString('ar-SA')} ر.س\n`;exps.slice(0,8).forEach(e=>{txt+=`${e.category==='✅ دخل'?'+':'-'}${e.amount} ${e.desc}\n`;});txt+='\n';}
+  if(section==='note'){txt+='📓 *الملاحظات*\n'+(document.getElementById('nb').value.trim()||'لا ملاحظات');}
+  return txt;
+}
+
+// ══ EXCEL EXPORTS (FIXED) ══
+function makeXlsx(sheets){
+  const wb=XLSX.utils.book_new();
+  sheets.forEach(([name,data])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),name));
+  return wb;
+}
+function exportAllExcel(){
+  try{
+    const wb=makeXlsx([
+      ['المهام',[['المهمة','الأولوية','الفئة','التكرار','الحالة','التاريخ'],...todos.map(t=>[t.text,priL[t.priority],t.category||'',recL[t.recurrence]||'',t.done?'مكتملة':'معلقة',t.date])]],
+      ['المواعيد',[['الموعد','التاريخ','الوقت','المكان'],...apts.map(a=>[a.title,a.date,a.time||'',a.loc||''])]],
+      ['المصاريف',[['الوصف','المبلغ','الفئة','التاريخ','النوع'],...exps.map(e=>[e.desc,e.amount,e.category,e.date,e.category==='✅ دخل'?'دخل':'مصروف'])]]
+    ]);
+    XLSX.writeFile(wb,'نور-'+todayStr()+'.xlsx');toast('📥 تم تصدير Excel!');
+  }catch(e){toast('⚠️ خطأ: '+e.message);}
+}
+function exportTodoExcel(){
+  try{const wb=makeXlsx([['المهام',[['المهمة','الأولوية','الفئة','التكرار','الحالة','التاريخ'],...todos.map(t=>[t.text,priL[t.priority],t.category||'',recL[t.recurrence]||'',t.done?'مكتملة':'معلقة',t.date])]]]);XLSX.writeFile(wb,'مهام-نور-'+todayStr()+'.xlsx');toast('📥 تم تصدير المهام!');}catch(e){toast('⚠️ خطأ: '+e.message);}
+}
+function exportAptExcel(){
+  try{const wb=makeXlsx([['المواعيد',[['الموعد','التاريخ','الوقت','المكان'],...apts.map(a=>[a.title,a.date,a.time||'',a.loc||''])]]]);XLSX.writeFile(wb,'مواعيد-نور-'+todayStr()+'.xlsx');toast('📥 تم تصدير المواعيد!');}catch(e){toast('⚠️ خطأ: '+e.message);}
+}
+function exportExpExcel(){
+  try{
+    const list=getFilteredExps();
+    const inc=list.filter(e=>e.category==='✅ دخل').reduce((s,e)=>s+e.amount,0);
+    const spd=list.filter(e=>e.category!=='✅ دخل').reduce((s,e)=>s+e.amount,0);
+    const data=[['الوصف','المبلغ','الفئة','التاريخ','النوع'],...list.map(e=>[e.desc,e.amount,e.category,e.date,e.category==='✅ دخل'?'دخل':'مصروف']),[],[' ','إجمالي الدخل',inc],['','إجمالي المصاريف',spd],['','الرصيد',inc-spd]];
+    const wb=makeXlsx([['المصاريف',data]]);XLSX.writeFile(wb,'مصاريف-نور-'+todayStr()+'.xlsx');toast('📥 تم تصدير المصاريف!');
+  }catch(e){toast('⚠️ خطأ: '+e.message);}
+}
+function exportJSON(){
+  const data={todos,apts,exps,note:sGet('note'),exported:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='نور-backup-'+todayStr()+'.json';a.click();
+  toast('📄 تم تصدير JSON!');
+}
+
+// ══ GOOGLE SHEETS ══
+let gsUrl='',gsAutoSync=false;
+function saveGsUrl(){
+  gsUrl=document.getElementById('gs-url').value.trim();
+  sSet('gs_url',gsUrl);updateGsStatus();
+  toast(gsUrl?'✅ تم حفظ رابط Google Sheets':'⚠️ أدخل الرابط أولاً');
+}
+function updateGsStatus(){
+  gsUrl=sGet('gs_url')||'';
+  const el=document.getElementById('gs-status');
+  if(!el)return;
+  if(gsUrl){el.textContent='● متصل';el.className='gs-status gs-on';}
+  else{el.textContent='● غير متصل';el.className='gs-status gs-off';}
+}
+async function testGs(){
+  gsUrl=sGet('gs_url')||'';
+  if(!gsUrl){toast('⚠️ أدخل الرابط أولاً في الإعدادات');return;}
+  toast('⏳ جاري الاختبار...');
+  try{
+    const r=await fetch(gsUrl+'?action=ping',{method:'GET'});
+    if(r.ok){toast('✅ الاتصال بـ Google Sheets يعمل!');}
+    else{toast('⚠️ الرابط لا يستجيب — تحقق منه');}
+  }catch(e){toast('⚠️ خطأ في الاتصال: '+e.message);}
+}
+async function syncToGs(){
+  gsUrl=sGet('gs_url')||'';
+  if(!gsUrl){toast('⚠️ أضف رابط Google Sheets في الإعدادات أولاً');return;}
+  toast('⏳ جاري الرفع...');
+  try{
+    const payload={todos,apts,exps,note:sGet('note'),syncedAt:new Date().toISOString()};
+    const r=await fetch(gsUrl,{method:'POST',body:JSON.stringify(payload)});
+    if(r.ok){toast('✅ تم رفع البيانات إلى Google Sheets!');}
+    else{toast('⚠️ فشل الرفع — تحقق من إعدادات Apps Script');}
+  }catch(e){toast('⚠️ خطأ: '+e.message);}
+}
+function syncToGsAuto(){if(sGet('gs_url'))setTimeout(syncToGs,1000);}
+
+function showGsCode(){
+  const code=`// Google Apps Script — انسخه في script.google.com
+const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID_HERE';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    
+    // المهام
+    writeSheet(ss, 'المهام', ['المهمة','الأولوية','الفئة','التكرار','الحالة','التاريخ'],
+      data.todos.map(t => [t.text, t.priority, t.category||'', t.recurrence||'', t.done?'مكتملة':'معلقة', t.date]));
+    
+    // المواعيد
+    writeSheet(ss, 'المواعيد', ['الموعد','التاريخ','الوقت','المكان'],
+      data.apts.map(a => [a.title, a.date, a.time||'', a.loc||'']));
+    
+    // المصاريف
+    writeSheet(ss, 'المصاريف', ['الوصف','المبلغ','الفئة','التاريخ','النوع'],
+      data.exps.map(ex => [ex.desc, ex.amount, ex.category, ex.date, ex.category==='✅ دخل'?'دخل':'مصروف']));
+    
+    return ContentService.createTextOutput(JSON.stringify({status:'ok'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(e) {
+    return ContentService.createTextOutput(JSON.stringify({status:'error',msg:e.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({status:'ok',ping:true}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function writeSheet(ss, name, headers, rows) {
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) sheet = ss.insertSheet(name);
+  sheet.clearContents();
+  sheet.appendRow(headers);
+  rows.forEach(r => sheet.appendRow(r));
+}`;
+  const w=window.open('','_blank','width=700,height=500');
+  w.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>كود Apps Script</title><style>body{font-family:monospace;padding:20px;background:#1e1e1e;color:#d4d4d4;white-space:pre-wrap;font-size:13px;line-height:1.6;direction:ltr}</style></head><body>${code}</body></html>`);
+  w.document.close();
+}
+
+function clearData(key){
+  if(!confirm('هل أنت متأكد من مسح هذه البيانات؟'))return;
+  if(key==='todos'){todos=[];saveTodos();renderTodos();}
+  else if(key==='apts'){apts=[];saveApts();renderApts();}
+  else if(key==='exps'){exps=[];saveExps();renderExps();}
+  toast('🗑️ تم المسح');
+}
+
+// ══ INIT ══
+window.addEventListener('DOMContentLoaded',()=>{
+  loadTodos();loadApts();loadExps();loadNote();renderDash();
+  document.getElementById('a-date').value=todayStr();
+  document.addEventListener('click',e=>{
+    const p=document.getElementById('np');
+    if(p.classList.contains('on')&&!p.contains(e.target)&&!e.target.closest('.bell'))p.classList.remove('on');
+    if(document.getElementById('share-modal').classList.contains('on')&&e.target===document.getElementById('share-modal'))closeModal();
+  });
+  checkNotifs();
+  gsUrl=sGet('gs_url')||'';
+});
+</script>
+</body>
+</html>
